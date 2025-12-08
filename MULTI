@@ -1,0 +1,123 @@
+// app/api/chat/route.ts
+import { google } from "@ai-sdk/google"
+import { streamText, UIMessage, convertToModelMessages } from "ai"
+
+export const maxDuration = 60
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json()
+
+  const result = streamText({
+    model: google("gemini-1.5-flash"),
+    system:
+      "You are Flux AI, a helpful, crisp explainer. Always provide a clear, logically ordered, step-by-step solution first. Keep tone concise and friendly. Do not include images. Do not attempt narration yourself; the UI may ask about narration.",
+    messages: convertToModelMessages(messages),
+  })
+
+  return result.toUIMessageStreamResponse()
+}
+
+// app/api/slideshow/route.ts
+import { google } from "@ai-sdk/google"
+import { generateObject } from "ai"
+import { z } from "zod"
+
+export const maxDuration = 60
+
+const SlideSchema = z.object({
+  title: z.string().min(1),
+  query: z.string().min(1),
+  bullets: z.array(z.string().min(1)).min(2).max(6),
+  narration: z.string().min(1),
+})
+const SlidesSchema = z.array(SlideSchema).min(1).max(8)
+
+export async function POST(req: Request) {
+  try {
+    const { question, answer }: { question: string; answer: string } = await req.json()
+
+    const prompt = `
+Given the user's question and your answer, create a concise slideshow plan to explain the solution visually.
+
+Requirements:
+- 4 to 6 slides.
+- Each slide must have:
+  - title: short string
+  - query: an image search query for Unsplash (concise, relevant)
+  - bullets: 2-4 short bullet points
+  - narration: a short paragraph to be spoken for this slide
+
+Return only the JSON array, matching the provided schema exactly. No extra commentary.
+
+Question:
+${question}
+
+Answer:
+${answer}
+`.trim()
+
+    const { object } = await generateObject({
+      model: google("gemini-1.5-flash"),
+      schema: SlidesSchema,
+      system:
+        "You are Flux AI. Produce a slideshow plan strictly as a JSON array matching the schema. Keep it visually oriented and concise.",
+      prompt,
+      // Google provider supports structured outputs; keep it enabled for safer parsing [^3][^6]
+    })
+
+    const slides = (object as z.infer<typeof SlidesSchema>).slice(0, 6)
+    return new Response(JSON.stringify({ slides }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    })
+  } catch (e: any) {
+    return new Response(JSON.stringify({ error: e?.message ?? "Failed to create slideshow" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+}
+
+// components/flux-chat.tsx
+import React from "react"
+import { SlidePlan } from "./types"
+
+const FluxChat: React.FC = () => {
+  const planAndShowSlideshow = async (questionText: string, assistantText: string) => {
+    const res = await fetch("/api/slideshow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: questionText, answer: assistantText }),
+    })
+
+    let data: any
+    try {
+      data = await res.json()
+    } catch {
+      const txt = await res.text()
+      throw new Error(`Invalid JSON response: ${txt.slice(0, 200)}`)
+    }
+    if (!res.ok) throw new Error(data.error || "Failed to make slideshow plan")
+    const plannedSlides: SlidePlan[] = data.slides
+
+    const imgRes = await fetch("/api/unsplash", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ queries: plannedSlides.map((s) => ({ query: s.query })) }),
+    })
+    let imgData: any
+    try {
+      imgData = await imgRes.json()
+    } catch {
+      const txt = await imgRes.text()
+      throw new Error(`Invalid JSON response (unsplash): ${txt.slice(0, 200)}`)
+    }
+    if (!imgRes.ok) throw new Error(imgData.error || "Failed to fetch images")
+
+    // Display slides and images here
+  }
+
+  return <div>Flux Chat Component</div>
+}
+
+export default FluxChat
