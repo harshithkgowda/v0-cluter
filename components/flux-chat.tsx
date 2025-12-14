@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
@@ -8,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
-import { Bot, Send, Sparkles, Images, Loader2, ChevronDown } from 'lucide-react'
+import { Bot, Send, Sparkles, Images, Loader2, ChevronDown } from "lucide-react"
 import Slideshow from "./slideshow"
 import AssistantMessage from "./assistant-message"
 import { addChat } from "@/lib/chat-history"
@@ -44,14 +46,8 @@ export default function FluxChat() {
 
   const isStreaming = status === "submitted" || status === "streaming"
 
-  const lastUserMessage = useMemo(
-    () => [...messages].reverse().find((m) => m.role === "user"),
-    [messages],
-  )
-  const lastAssistantMessage = useMemo(
-    () => [...messages].reverse().find((m) => m.role === "assistant"),
-    [messages],
-  )
+  const lastUserMessage = useMemo(() => [...messages].reverse().find((m) => m.role === "user"), [messages])
+  const lastAssistantMessage = useMemo(() => [...messages].reverse().find((m) => m.role === "assistant"), [messages])
 
   // Track when a conversation result is completed to add to history
   const savedForIdRef = useRef<string | null>(null)
@@ -109,7 +105,10 @@ export default function FluxChat() {
         .trim()
 
       const questionText = lastUserMessage
-        ? (lastUserMessage.parts || []).map((p: any) => (p.type === "text" ? p.text : "")).join("\n").trim()
+        ? (lastUserMessage.parts || [])
+            .map((p: any) => (p.type === "text" ? p.text : ""))
+            .join("\n")
+            .trim()
         : ""
 
       const res = await fetch("/api/slideshow", {
@@ -121,7 +120,7 @@ export default function FluxChat() {
       if (!res.ok) throw new Error(data.error || "Failed to make slideshow plan")
       const plannedSlides: SlidePlan[] = data.slides
 
-      const imgRes = await fetch("/api/unsplash", {
+      const imgRes = await fetch("/api/pixabay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ queries: plannedSlides.map((s) => ({ query: s.query })) }),
@@ -184,9 +183,7 @@ export default function FluxChat() {
               <div ref={listRef} className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-3">
                 {messages.map((m) => {
                   const isCurrentAssistant = m.role === "assistant" && m.id === lastAssistantMessage?.id
-                  const text = (m.parts || [])
-                    .map((p: any) => (p.type === "text" ? p.text : ""))
-                    .join("")
+                  const text = (m.parts || []).map((p: any) => (p.type === "text" ? p.text : "")).join("")
                   return (
                     <div key={m.id} className={cn("flex gap-3", m.role === "user" ? "justify-end" : "justify-start")}>
                       {m.role !== "user" && (
