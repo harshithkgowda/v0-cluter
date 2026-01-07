@@ -1,30 +1,61 @@
-# 3D Model Generator, Powered by Hyper3D Rodin
+The 3D Model Generator is a web-based platform that generates realistic, customizable 3D human avatars from user inputs and images. The system leverages computer vision, real-time rendering, and 3D graphics pipelines to create interactive 3D models that can be used for virtual try-on, gaming, metaverse, and e-commerce applications.
+The project is designed with performance, extensibility, and real-time interaction in mind.
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/22030138717-revaeduins-projects/v0-cluter)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/k5rDCxnEiOX)
+#Key Features
+3D human model generation from facial images and parameters
+Real-time 3D rendering in the browser
+Support for customizable body shape, skin tone, hair, and clothing
+Virtual try-on capability for apparel
+Interactive camera controls (rotate, zoom, pan)
+Asset-based clothing and accessory system
+Export-ready 3D models (GLTF/GLB)
 
-## Overview
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+System Architecture
 
-## Deployment
+Client (WebGL / Three.js / Babylon.js)
+        |
+        v
+Computer Vision Layer (MediaPipe / Face Mesh)
+        |
+        v
+3D Model Generator & Modifier
+        |
+        v
+Rendering Engine → Interactive 3D Scene
 
-Your project is live at:
 
-**[https://vercel.com/22030138717-revaeduins-projects/v0-cluter](https://vercel.com/22030138717-revaeduins-projects/v0-cluter)**
+Tech Stack
+Frontend & Rendering
+JavaScript / TypeScript
+Three.js / Babylon.js
+WebGL
+HTML5 Canvas
+Computer Vision & AI
+MediaPipe Face Mesh
+Facial landmark extraction
+Parameter-based 3D morphing
+Backend 
+Node.js
+REST APIs for asset delivery
+Cloud storage for 3D assets
+Assets & Formats
+GLTF / GLB models
+Texture mapping (PBR materials)
+Modular clothing assets
 
-## Build your app
 
-Continue building your app on:
 
-**[https://v0.app/chat/k5rDCxnEiOX](https://v0.app/chat/k5rDCxnEiOX)**
+Installation & Setup
+# Clone repository
+git clone https://github.com/harshithkgowda/v0-cluter.git
 
-## How It Works
+# Navigate to project
+cd 3d-model-generator
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
